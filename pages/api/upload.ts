@@ -4,7 +4,10 @@ import { put } from '@vercel/blob';
 export const config = getConfig();
 
 const profilePictureUploadHandler = withFileUpload(async (req, res) => {
-	const blob = await put(req.file.originalFilename, req.file.toStream(), {
+	if (!req.file) {
+		return res.status(422).json({ error: 'No file data' });
+	}
+	const blob = await put(req.file.originalFilename || 'temp', req.file.toStream(), {
 		access: 'public',
 	});
 

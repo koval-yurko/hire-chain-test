@@ -15,11 +15,10 @@ import { trpc } from "@/lib/trpc";
 type Inputs = z.infer<typeof UPDATE_PROFILE_FORM_SCHEMA>;
 
 export function ProfileForm() {
-	const fileInput = useRef<HTMLInputElement | null>(null)
 	const utils = trpc.useContext();
 	const profile = trpc.profile.getProfile.useQuery();
 
-	const uploadFileMutation = useUploadFile()
+	const uploadFileMutation = useUploadFile();
 	const updateProfileMutation = trpc.profile.updateProfile.useMutation({
 		onSuccess() {
 			utils.profile.invalidate()
@@ -31,35 +30,34 @@ export function ProfileForm() {
 	});
 
 	const { errors } = form.formState;
+	const loading = uploadFileMutation.isLoading || updateProfileMutation.isLoading
 
 	useEffect(() => {
 		if (!profile.data) {
-			return
+			return;
 		}
-		Object.keys(profile.data).forEach((key) => {
-			if (profile.data[key]) {
-				form.setValue(key, profile.data[key])
-			}
-		})
-	}, [profile.data, form])
+		if (profile.data.username) {
+			form.setValue('username', profile.data.username);
+		}
+		if (profile.data.bio) {
+			form.setValue('bio', profile.data.bio);
+		}
+	}, [profile.data, form]);
 
 
 	const updateProfile = form.handleSubmit(async (data) => {
-		const { imageFile, ...rest } = data
-		let payload = getDiff(profile.data, rest)
-		if (imageFile[0]) {
-			const pfp = await uploadFileMutation.mutate(imageFile[0])
+		const { imageFile, ...rest } = data;
+		let payload = getDiff(profile.data, rest);
+		if (imageFile && imageFile[0]) {
+			const pfp = await uploadFileMutation.mutate(imageFile[0]);
 			if (pfp) {
-				payload = payload || {}
-				payload.pfp = pfp
+				payload = payload || {};
+				payload.pfp = pfp;
 			}
 		}
 		if (payload) {
-			await updateProfileMutation.mutate(payload)
-
-			if (fileInput.current) {
-				fileInput.current.value = '';
-			}
+			await updateProfileMutation.mutate(payload);
+			form.setValue('imageFile', undefined);
 		}
 	});
 
@@ -79,7 +77,7 @@ export function ProfileForm() {
 
 				<div>
 					<Label htmlFor="photo">Avatar file</Label>
-					<Input ref={fileInput} id="imageFile" type="file" {...form.register('imageFile')} />
+					<Input id="imageFile" type="file" {...form.register('imageFile')} />
 					{errors.imageFile && <div className="text-sm text-red-600">{ errors.imageFile.message }</div>}
 				</div>
 
@@ -92,7 +90,7 @@ export function ProfileForm() {
 				{uploadFileMutation.error && <p className="text-sm text-red-600">Upload Image error</p>}
 				{updateProfileMutation.error && <p className="text-sm text-red-600">Update Profile error</p>}
 
-				<Button type='submit'>Update Profile</Button>
+				<Button type='submit' disabled={loading}>Update Profile</Button>
 			</form>
 		</Form>
 	);

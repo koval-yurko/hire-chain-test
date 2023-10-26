@@ -1,11 +1,14 @@
-import { UPDATE_PROFILE_TRPC_SCHEMA } from '@/lib/validation-schemas/profile';
+import { z } from 'zod';
+import { PROFILE_SCHEMA, UPDATE_PROFILE_TRPC_SCHEMA} from '@/lib/validation-schemas/profile';
 import { procedure, router } from '@/server/trpc';
 
-let profile = {
+type Profile = z.infer<typeof PROFILE_SCHEMA>;
+
+let profile: Profile = {
 	username: 'yurii.kovalchuk',
 	bio: 'Tech Lead (Node.js)',
 	pfp: 'https://k9fchyazetkyltjo.public.blob.vercel-storage.com/photo-ECLfFWJXm1WP5h6UAFRu83RPYWoGw6.jpg'
-}
+};
 
 const profileRouter = router({
 	updateProfile: procedure.input(UPDATE_PROFILE_TRPC_SCHEMA).mutation(({ input }) => {
@@ -13,10 +16,10 @@ const profileRouter = router({
 			...profile,
 			...input,
 		}
-		return profile
+		return profile;
 	}),
 	getProfile: procedure.query(async () => {
-		return profile
+		return profile;
 	}),
 });
 
