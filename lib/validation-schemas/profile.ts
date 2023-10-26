@@ -10,10 +10,15 @@ export const UPDATE_PROFILE_FORM_SCHEMA = PROFILE_SCHEMA.omit({
 	pfp: true,
 })
 	.extend({
-		// TODO: replace this validation with something
 		// that will make sure this is of type File
 		// and the file is less than 1mb in size
-		imageFile: z.any(),
+		imageFile: z.custom<FileList>((files) => {
+			const file = files[0]
+			const fileSize = file?.size || 0;
+			const isValidFile = file ? file instanceof File : true;
+			const isValidSize = fileSize <= 1 * 1000 * 1000 // 1Mb
+			return isValidFile && isValidSize
+		}, "File is wrong")
 	})
 	.partial();
 
